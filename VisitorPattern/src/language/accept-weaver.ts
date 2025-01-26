@@ -1,10 +1,10 @@
 import type { ValidationAcceptor, ValidationChecks } from 'langium';
-import type { RoboMlAstType } from '../generated/ast.js';
-import * as InterfaceAST from '../generated/ast.js';
+import type { RoboMlAstType } from '../language/generated/ast.js';
+import * as InterfaceAST from '../language/generated/ast.js';
 import * as ClassAST from './visitor.js';
 import { RoboMLVisitor } from './visitor.js';
 // TODO : Update this import for your project
-import type { RoboMlServices } from '../robo-ml-module.js';
+import type { RoboMlServices } from '../language/robo-ml-module.js';
 
 /**
  * Register custom validation checks.

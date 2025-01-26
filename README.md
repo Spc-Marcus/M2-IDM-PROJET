@@ -6,7 +6,7 @@ These lab sessions are to be realized in groups of two.
 
 ## Overall objectives of the lab
 
-During these lab sessions, you will create your own version of RoboML, a language to define the behavior of a small robot. Building the DSL will include modeling the domain (*i.e.* the concepts and their relationships), and implements the associated tooling: *e.g.* the text editor and its services, an interpreter (through a web-based simulator) and a compiler (to Arduino code that will run on the robot itself).
+During these lab sessions, you will create your own version of RoboML, a language to define the behavior of a small robot. Building the DSL will include modeling the domain (*i.e.*, the concepts and their relationships), and implements the associated tooling: *e.g.*, the text editor and its services, an interpreter (through a web-based simulator) and a compiler (to Arduino code that will run on the robot itself).
 
 Below, you can find an example of a program that we expect to write in your language.
 
@@ -33,7 +33,7 @@ let void square(){
 }
 ```
 
-The above program, when executed, should set the speed of the robot and then perform 5 time (loop) a square pattern movement (square function).
+The above program, when executed, should set the speed of the robot and then perform 5 times (loop) a square pattern movement (square function).
 
 The robot used for this lab has four wheels with individual motors, and an ultrasound sensor which can be used to measure distance to an object in front. We expect your language to mostly follow the imperative programming paradigm, with basic arithmetic and commands for the robot.
 
@@ -43,21 +43,15 @@ These labs are split in three parts corresponding to the three main aspects of D
 
 The lab sessions for this course will consist in the realization of these aspects. After each major step, you will need to showcase your work to your lab teacher through a small demonstration, which will be used to grade you. You can only move onto the next step once the teacher has validated the current part.
 
-A final evaluation of your work will be done at the end, based on your code.
-This code should be pushed to a GitLab/GitHub repository, and the link sent to your lab teacher.
-
 To encourage you to finish completely at least one of the two possible semantics, yet exploring both compilation and interpretation, you will have to choose a major and a minor semantics.
+The major semantics is the one that will be used to evaluate your project.
+The minor one is not mandatory but can give you bonus points.
 This choice should be clearly stated in the README file of the git repository.
 
 The evaluation grid is the following:
 - Abstract syntax : 5
 - Concrete Syntax : 5
 - Semantics : 10
-    * Major : 7
-    * Minor : 3
-
-The **deadline** for the project is the ___26/05/2024 at 23:59___.
-Commits after this date will be ignored.
 
 ## Part 1 - Domain modeling: definition of the language's metamodel with Ecore
 
@@ -71,8 +65,8 @@ There is a short list of mandatory concepts that we want:
 - Movement (front, back, sides)
 - Rotation
 - Speed
-- Sensors (time, distance in front of the robot)
-- Units (*e.g.,* cm, mm)
+- Sensors (time, distance to obstacle in front of the robot)
+- Units (*e.g.*, cm, mm)
 - Basic arithmetic and boolean expressions
 - Control structure (loop, conditions)
 - Functions and variables
@@ -84,11 +78,11 @@ As a type -> `var cm length = 10`.
 
 ### Ecore modeling
 
-Within your Eclipse RCP that includes EMF, Xtext and Xtend (e.g., [Eclipse DSL](https://www.eclipse.org/downloads/packages/release/2023-09/r/eclipse-ide-java-and-dsl-developers) with the added [Ecore tools](https://projects.eclipse.org/projects/modeling.emft.ecoretools) which you can install with _Help_ -> _Eclipse Marketplace..._ -> search for `ecoretools`), create an _Ecore Modeling Project_. Then you can start modeling your domain as an object-oriented metamodel, which should represent the different concepts of your language and how they are related.
+Within your Eclipse RCP that includes EMF, Xtext and Xtend (e.g., [Eclipse DSL](https://www.eclipse.org/downloads/packages/release/2024-12/r/eclipse-ide-java-and-dsl-developers) with the added [Ecore tools](https://projects.eclipse.org/projects/modeling.emft.ecoretools) which you can install with _Help_ -> _Eclipse Marketplace..._ -> search for `ecoretools`), create an _Ecore Modeling Project_. Then you can start modeling your domain as an object-oriented metamodel, which should represent the different concepts of your language and how they are related.
 
 You may validate your metamodel by right-clicking on your ecore model and then clicking on _Validate_.
 
-When this is done, you can generate the Java-based implementation of your domain model by opening the associated `genmodel` file, right-clicking on the root element and _Generate all_
+When this is done, you can generate the Java-based implementation of your domain model by opening the associated `genmodel` file, right-clicking on the root element and _Generate all_. This is not mandatory to continue the lab.
 
 You may assess the expressivity of your metamodel (*i.e.*, check if it captures your domain well, in your case meaning it supports the modeling of the proposed example) by opening the Ecore metamodel, right-click on the concept of the root element of your expected model, and choose _Create dynamic instance_. Then you can create a model in a tree-based editor, and ensure your metamodel supports the expected model structure. 
 
@@ -96,14 +90,16 @@ You may assess the expressivity of your metamodel (*i.e.*, check if it captures 
 
 After determining the domain, it is time to move on to the actual text editor for your language. In this lab, we will be building this editor using the TypeScript-based [Langium](https://langium.org/) workbench to build a Visual Studio Code extension supporting edition of your language.
 
-If not done already, you will need to install a [node environment](https://nodejs.org/en/download) as well as [Visual Studio Code](https://code.visualstudio.com/docs/setup/setup-overview), and then run the command `npm i -g yo@4.3.1 generator-langium@2.0.0` to install the Langium project generator. Then, run `yo langium` to create the project. This will offer to create a few different things; you **have to** say yes to all of them, pick a language name, extension name and a file extension (*e.g.* .rob).
+If not done already, you will need to install a [node environment](https://nodejs.org/en/download) as well as [Visual Studio Code](https://code.visualstudio.com/docs/setup/setup-overview), and then run the command `npm i -g yo@7.1.1 generator-langium@3.3.0` to install the Langium project generator. Then, run `yo langium` to create the project. This will offer to create a few different things; you **have to** say yes to all of them, pick a language name, extension name and a file extension (*e.g.* .rob).
 
+> [!IMPORTANT]
 > We use particular version of yo and generator-langium in these labs due to the rapid change in version of langium.
-**Make sure that you use these versions**.
+> **Make sure that you use these versions**.
 
 Depending on what modeling tool you picked in part 1, the next step can change a little bit. If you picked another method than Ecore, skip the following section.
 
-**N.B.**: There is flexibility on the concrete syntax of the language, but make it concise and usable for non-expert in programming. Ask your teacher during labs if you plan to change the syntax.
+> [!NOTE]
+> There is flexibility on the concrete syntax of the language, but make it concise and usable for non-expert in programming. Ask your teacher during labs if you plan to change the syntax.
 
 ### Ecore modeling
 
@@ -117,7 +113,7 @@ fragment = io.typefox.xtext2langium.Xtext2LangiumFragment {
     }
 ```
 
-Right click the MWE2 file and run it. You should see a langium folder appear in your project, with corresponding `.langium` grammar files which you can put into your `src/language/` folder of the Langium project. Make sure the grammars names match up between your projects, otherwise you will have to manually refactor the conflicts.
+Right click the MWE2 file and run it. You should see a `langium` folder appear in your project, with corresponding `.langium` grammar files which you can put into your `src/language/` folder of the Langium project. Make sure the grammars names match up between your projects, otherwise you will have to manually refactor the conflicts.
 
 ### Other types of modeling
 
@@ -166,7 +162,8 @@ let void entry () {
 }
 ```
 
-**N.B.**: If you have made changes on the syntax, the equivalent AST with your syntax is your test.
+> [!NOTE]
+> If you have made changes on the syntax, the equivalent AST with your syntax is your test.
 
 ## Part 3 - Executable modeling
 
@@ -175,14 +172,15 @@ By now, your programs should be parsable, which means Langium will be able to gi
 The next step is to try and execute those model instances: this can be done either through interpretation or compilation. You will need to implement these in a `compiler.ts` and `interpreter.ts` file (take a look at the `generator.ts` in the cli folder), which you should put in a new `src/semantics/` folder.
 
 To execute the program, you will use the [visitor design pattern](https://en.wikipedia.org/wiki/Visitor_pattern) to implement a compiler targeting the Arduino language (allowing the execution on a real robot) and an interpreter directly executing the program.
-The visitor pattern allows to split the language definition in two parts, the syntax (abstract syntax defined through the metamodel and concrete syntax defined by the grammar) and the semantics (interpreter and compiler), easing the extension/evolution of the language semantics.
+The visitor pattern allows you to split the language definition in two parts: the syntax (abstract syntax defined through the metamodel and concrete syntax defined by the grammar), and the semantics (interpreter and compiler), easing the extension/evolution of the language semantics.
 Each method implemented in a visitor represents the semantics of a concept, often relying on the semantics of its child in the AST.
 
-You will find in the `VisitorPattern` folder a template code to define the visitor interface, and the accept weaver to add the accept method to the node of the AST.
-Further explanation are detailed in the comments of the provided files.
-
-> In addition to the template, a python generator is provided.
-This generator take as parameter a file containing the concepts names (1 per line), and the project name (`"projectName"` in `langium-config.json`)
+Langium does not provide a visitor pattern by default.
+To avoid creating the patten manually, you can use an external library: [langium-visitor](https://www.npmjs.com/package/langium-visitor).
+To use it, you will need to install it in your project with `npm i langium-visitor`.
+You can then add a new script command in your `package.json` file to generate the visitor: `"langium:visitor": "langium-visitor"`.
+The library will use the JSON grammar compiled by Langium from you `.langium` files to automatically generate the visitor interfaces.
+More information about how to plug the visitor to your Langium project can be found on the [Github repository](https://github.com/theogiraudet/langium-visitor).
 
 ### Interpretation: 
 
@@ -201,7 +199,8 @@ This JavaScript code expects to receive the final state of the scene simulated.
 To understand how to create the communication between the LSP server and client, we propose you to first create a 'parseAndValidate' LSP action.
 The general idea of the 'parseAndValidate' action can be found [here](https://web.archive.org/web/20230323045804/https://langium.org/tutorials/customizing_cli/), while the code required to define new LSP action usable in the web is detailed [here](https://web.archive.org/web/20230323041439/https://langium.org/tutorials/generation_in_the_web/)
 
-**N.B.** the `setup.js` file already contains parts of the required code
+> [!NOTE]
+> The `setup.js` file already contains parts of the required code.
 
 ### Compilation:
 
@@ -235,8 +234,10 @@ The global structure of this program will not require many changes.
 If you want details on the possible actions, go look at the definition of the `demoAction` function used in the example, it uses most of the possible movements.
 > You can find it in the MotorWheel lib, in the `Omni4WD.cpp` file
 
-**WARNING :** This robot requires non-classical libraries, you will have to add them.
-Copy the folders in the `compiler/Arduino Example/lib/` folder in the `libraries` folder of your Arduino IDE.
+> [!WARNING]
+> This robot requires non-classical libraries, you will have to add them.
+> Copy the folders in the `compiler/Arduino Example/lib/` folder in the `libraries` folder of your Arduino IDE.
+
 
 
 
