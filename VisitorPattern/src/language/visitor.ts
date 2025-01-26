@@ -1,4 +1,4 @@
-import * as ASTInterfaces from '../generated/ast.js';
+import * as ASTInterfaces from '../language/generated/ast.js';
 import { Reference } from 'langium';
 
 export interface RoboMLVisitor{
