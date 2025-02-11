@@ -177,7 +177,7 @@ Each method implemented in a visitor represents the semantics of a concept, ofte
 
 Langium does not provide a visitor pattern by default.
 To avoid creating the patten manually, you can use an external library: [langium-visitor](https://www.npmjs.com/package/langium-visitor).
-To use it, you will need to install it in your project with `npm i langium-visitor`.
+To use it, you will need to install it in your project with `npm i -D langium-visitor`.
 You can then add a new script command in your `package.json` file to generate the visitor: `"langium:visitor": "langium-visitor"`.
 The library will use the JSON grammar compiled by Langium from you `.langium` files to automatically generate the visitor interfaces.
 More information about how to plug the visitor to your Langium project can be found on the [Github repository](https://github.com/theogiraudet/langium-visitor).
@@ -195,12 +195,56 @@ In addition, you will find the scene classes representing the environment in whi
 The scene **REQUIRES** you to add timestamps objects recording the steps of the simulation to replay it in the web page.  
 The JavaScript files in the `static/simulator` folder are used to display the simulation on the web page.
 This JavaScript code expects to receive the final state of the scene simulated.
+The `static` folder needs to be merged with the `static` folder of Langium and the `index.html` files must replaced the existing one.
 
 To understand how to create the communication between the LSP server and client, we propose you to first create a 'parseAndValidate' LSP action.
-The general idea of the 'parseAndValidate' action can be found [here](https://web.archive.org/web/20230323045804/https://langium.org/tutorials/customizing_cli/), while the code required to define new LSP action usable in the web is detailed [here](https://web.archive.org/web/20230323041439/https://langium.org/tutorials/generation_in_the_web/)
+The general idea of the 'parseAndValidate' action can be found [here](https://web.archive.org/web/20230323045804/https://langium.org/tutorials/customizing_cli/), while the code required to define new LSP action usable in the web is detailed [here](https://web.archive.org/web/20230323041439/https://langium.org/tutorials/generation_in_the_web/).
+However, the documentation for the web part is currently outdated for the latest version of Langium.
+Instead of it, you can add this code at the end of the `src/setupClassic.ts` file:
 
-> [!NOTE]
-> The `setup.js` file already contains parts of the required code.
+```ts
+const client = wrapper.getLanguageClient();
+if (!client) {
+    throw new Error('Unable to obtain language client!');
+}
+
+(window as any).execute = () => client.sendNotification('custom/Execute');
+
+client.onNotification('custom/Execute', onExecute);
+
+function onExecute(resp: any) {
+    // TODO
+}
+```
+
+This code is executed by the client. Basically, we add a new anonymous function `execute` in the window, that will send a custom LSP notification when triggered.
+When the client receive a response on the same method (`custom/Execute`), we trigger the function `onExecute` whose parameters are the data send by the server.
+The function `window.execute` is called inside the `index.html`, by a button.
+
+In the server side, we need to modify the function `src/language/main-browser.ts` by adding this code at the end of the file:
+
+```ts
+connection.onNotification("custom/Execute", () => {
+    const results: { document: string, result: string }[] = [];
+    shared.workspace.LangiumDocuments.all.forEach(document => {
+        const model = document.parseResult.value as Program;
+        if(document.diagnostics === undefined 
+            || document.diagnostics.filter((i) => i.severity === 1).length === 0
+            ) {
+            const result = <your-method>(model as ClassProgram);
+            if(result) {
+                results.push({ document: document.uri.toString(), result });
+            }
+        }
+    });
+    connection.sendNotification("custom/Execute", results);
+});
+```
+
+Here, we are listening a notification with the method `custom/Execute`. When received, we are executing our custom method on each available model (if valid), such as validation or simulation, and we add the result to an array with the document name as key.
+At the end, we send the resulting array to the client on the same method.
+
+Finally, you can execute `npm run serve` to run your server/client architecture, and go to the printed URL to test your application.
 
 ### Compilation:
 
@@ -214,19 +258,8 @@ In the same idea as an interpreter, a compiler can also be implemented using a v
 
 As previously, you can put your visitor in the semantics folder. You can then use your compiler by adding a new command to the Command Line Interface provided by Langium, which will be the entry point from which you call the rest of your functions. Registering new commands can be done in `src/cli/main.ts`; once that is done, you should be able to call `./bin/cli.js compile <source>` in your terminal and have it generate Arduino code corresponding to the source program given as argument.
 
-Before you add compiling commands, make sure your `bin/cli.js` file in the project has the following content:
-
-```js
-#!/usr/bin/env node
-
-import main from '../out/cli/main.js';
-main();
-```
-
-You will also need to change the line `.version(require('../../package.json').version);` to `.version("0.0.1");` in `src/cli/main.ts`.
-
 To understand how to call the semantics from the command line, we propose you to first create a 'parseAndValidate' action.
-The description of the 'parseAndValidate' action can be found [here](https://web.archive.org/web/20230323045804/https://langium.org/tutorials/customizing_cli/).
+The description of the 'parseAndValidate' action can be found [here](https://langium.org/docs/learn/minilogo/customizing_cli/) ([archive](https://web.archive.org/web/20240916195444/https://langium.org/docs/learn/minilogo/customizing_cli/)).
 After that you will be able to call your visitor in a 'generate' action.
 
 You will find in the `Compiler` folder an example of code to control the robot.

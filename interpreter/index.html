@@ -66,4 +66,12 @@
         <script src="simulator/robot.js"></script>
         <script src="simulator/sketch.js"></script>
     </body>
+    <script type="module">
+        import { configureMonacoWorkers } from './src/setupCommon';
+        import { executeClassic } from './src/setupClassic';
+
+        configureMonacoWorkers();
+        const startingPromise = executeClassic(document.getElementById('monaco-editor-root'));
+    </script>
+</html>
 </html>
