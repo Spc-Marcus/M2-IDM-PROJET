@@ -295,9 +295,9 @@ If you want details on the possible actions, go look at the definition of the `d
 
 ### No run configuration when trying to generate the Langium grammar from the Xtext one
 
-**Have you installed the Eclipse plugin?**
-**Have you added the plugin to your Xtext project ?**
-**Have you modified the `.mwe2` file?**
+**Have you installed the Eclipse plugin?**  
+**Have you added the plugin to your Xtext project?**  
+**Have you modified the `.mwe2` file?**  
 
 If yes to all the questions, so you have to uninstall the MWE2 SDK and reinstall it.
 For that:
