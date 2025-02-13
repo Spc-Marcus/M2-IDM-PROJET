@@ -175,7 +175,7 @@ The first one is directly accessible from the Langium VSCode extension, by typin
 This will open a new panel and display you your grammar in a graphical way. 
 It allows you to verify your grammar at a higher level.
 
-![railroad](./images/raiload.png)
+![railroad](./images/railroad.png)
 
 The second one is accessible from the Langium website, in the `Playground` page.
 Here you can past your grammar (without forgetting to also past your types and terminals, and removing your imports) and a program conforms to the grammar.
