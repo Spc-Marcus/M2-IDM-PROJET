@@ -177,7 +177,7 @@ It allows you to verify your grammar at a higher level.
 
 ![railroad](./images/railroad.png)
 
-The second one is accessible from the Langium website, in the `Playground` page.
+The second one is accessible from the Langium website, in the [`Playground` page](https://langium.org/playground/).
 Here you can past your grammar (without forgetting to also past your types and terminals, and removing your imports) and a program conforms to the grammar.
 By clicking on the "Tree" icon, you can open a new panel displaying the abstract syntax tree of your program, in JSON.
 However be aware, the playground have sometime some refresh issue so it can happen that the program text editor is not synchronized anymore with the grammar one.
