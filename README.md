@@ -91,6 +91,7 @@ You may assess the expressivity of your metamodel (*i.e.*, check if it captures 
 After determining the domain, it is time to move on to the actual text editor for your language. In this lab, we will be building this editor using the TypeScript-based [Langium](https://langium.org/) workbench to build a Visual Studio Code extension supporting edition of your language.
 
 If not done already, you will need to install a [node environment](https://nodejs.org/en/download) as well as [Visual Studio Code](https://code.visualstudio.com/docs/setup/setup-overview), and then run the command `npm i -g yo@7.1.1 generator-langium@3.3.0` to install the Langium project generator. Then, run `yo langium` to create the project. This will offer to create a few different things; you **have to** say yes to all of them, pick a language name, extension name and a file extension (*e.g.* .rob).
+You can also install the Langium extension from the VSCode marketplace, to have syntax highligthing and validation in your grammar.
 
 > [!IMPORTANT]
 > We use particular version of yo and generator-langium in these labs due to the rapid change in version of langium.
@@ -206,16 +207,19 @@ More information about how to plug the visitor to your Langium project can be fo
 
 In this lab, your interpreter will run on a web-based simulator for the robot written in JavaScript.
 You will find in the interpreter folder of this repository, the code of the simulator provided for this part of the lab.
-In the `interpreter.ts`, implement the visitor
-
-You will find in the `Interpreter` folder the code of the simulator.
-The Typescript files in the `web/simulator` folder represent the elements of the simulation used in your interpreter.
+The Typescript files in the `src/web/simulator` folder represent the elements of the simulation used in your interpreter.
 Especially, you will find the *Robot* class that will be manipulated by your interpreter.
 In addition, you will find the scene classes representing the environment in which the robot evolves.  
 The scene **REQUIRES** you to add timestamps objects recording the steps of the simulation to replay it in the web page.  
-The JavaScript files in the `static/simulator` folder are used to display the simulation on the web page.
-This JavaScript code expects to receive the final state of the scene simulated.
-The `static` folder needs to be merged with the `static` folder of Langium and the `index.html` files must replaced the existing one.
+The TypeScript files in the `src/web/lib` folder are used to display the simulation on the web page and should only be used on the client side.
+This TypeScript code expects to receive the final state of the scene simulated.
+The `static` folder needs to be merged with the `static` folder of Langium and the `index.html` files must replace the existing one.
+Finally, we use P5 to render the simulation in the browser, so you have to install it:
+
+```bash
+npm i p5@1.11.3
+npm i -D @types/p5@1.7.6
+```
 
 To understand how to create the communication between the LSP server and client, we propose you to first create a 'parseAndValidate' LSP action.
 The general idea of the 'parseAndValidate' action can be found [here](https://web.archive.org/web/20230323045804/https://langium.org/tutorials/customizing_cli/), while the code required to define new LSP action usable in the web is detailed [here](https://web.archive.org/web/20230323041439/https://langium.org/tutorials/generation_in_the_web/).
@@ -228,40 +232,26 @@ if (!client) {
     throw new Error('Unable to obtain language client!');
 }
 
-(window as any).execute = () => client.sendNotification('custom/Execute');
-
-client.onNotification('custom/Execute', onExecute);
-
-function onExecute(resp: any) {
-    // TODO
-}
+setup(client, getDocumentUri(wrapper)); // setup function of the setup.ts file
 ```
 
-This code is executed by the client. Basically, we add a new anonymous function `execute` in the window, that will send a custom LSP notification when triggered.
-When the client receive a response on the same method (`custom/Execute`), we trigger the function `onExecute` whose parameters are the data send by the server.
-The function `window.execute` is called inside the `index.html`, by a button.
+You will find an example of communication between the client and the server from the client perspective in the `setup.ts` file (lines 63 and 66).
 
 In the server side, we need to modify the function `src/language/main-browser.ts` by adding this code at the end of the file:
 
 ```ts
-connection.onNotification("custom/Execute", () => {
-    const results: { document: string, result: string }[] = [];
-    shared.workspace.LangiumDocuments.all.forEach(document => {
-        const model = document.parseResult.value as Program;
-        if(document.diagnostics === undefined 
-            || document.diagnostics.filter((i) => i.severity === 1).length === 0
-            ) {
-            const result = <your-method>(model as ClassProgram);
-            if(result) {
-                results.push({ document: document.uri.toString(), result });
-            }
-        }
-    });
-    connection.sendNotification("custom/Execute", results);
-});
+function getModelFromUri(uri: string): <YourRootConceptFromVisitor> | undefined {
+    const document = shared.workspace.LangiumDocuments.getDocument(URI.parse(uri));
+    if(document && document.diagnostics === undefined || document.diagnostics.filter((i) => i.severity === 1).length === 0) {
+        return document.parseResult.value as <YourRootConceptFromVisitor>;
+    }
+    return undefined;
+}
+
+connection.onNotification("custom/ParseAndValidate", (uri: string) => connection.sendNotification("custom/ParseAndValidate", <yourMethod>(getModelFromUri(uri))));
 ```
 
-Here, we are listening a notification with the method `custom/Execute`. When received, we are executing our custom method on each available model (if valid), such as validation or simulation, and we add the result to an array with the document name as key.
+Here, we are listening a notification with the method `custom/ParseAndValidate`. When received, we are executing our custom method on each available model (if valid), such as validation or simulation, and we add the result to an array with the document name as key.
 At the end, we send the resulting array to the client on the same method.
 
 Finally, you can execute `npm run serve` to run your server/client architecture, and go to the printed URL to test your application.
@@ -276,7 +266,7 @@ When your generator generates valid Arduino programs, ask your teacher the robot
 In the same idea as an interpreter, a compiler can also be implemented using a visitor pattern - but instead of directly simulating the behavior, you will generate the Arduino code representing this behavior.
 
 
-As previously, you can put your visitor in the semantics folder. You can then use your compiler by adding a new command to the Command Line Interface provided by Langium, which will be the entry point from which you call the rest of your functions. Registering new commands can be done in `src/cli/main.ts`; once that is done, you should be able to call `./bin/cli.js compile <source>` in your terminal and have it generate Arduino code corresponding to the source program given as argument.
+As previously, you can put your visitor in the semantics folder. You can then use your compiler by adding a new command to the Command Line Interface provided by Langium, which will be the entry point from which you call the rest of your functions. Registering new commands can be done in `src/cli/main.ts`; once that is done, you should be able to call `./bin/cli.js compile <source>` (or `node ./bin/cli.js compile <source>`) in your terminal and have it generate Arduino code corresponding to the source program given as argument.
 
 To understand how to call the semantics from the command line, we propose you to first create a 'parseAndValidate' action.
 The description of the 'parseAndValidate' action can be found [here](https://langium.org/docs/learn/minilogo/customizing_cli/) ([archive](https://web.archive.org/web/20240916195444/https://langium.org/docs/learn/minilogo/customizing_cli/)).
@@ -291,7 +281,7 @@ If you want details on the possible actions, go look at the definition of the `d
 > This robot requires non-classical libraries, you will have to add them.
 > Copy the folders in the `compiler/Arduino Example/lib/` folder in the `libraries` folder of your Arduino IDE.
 
-## Knowing issues
+## Known issues
 
 ### No run configuration when trying to generate the Langium grammar from the Xtext one
 
@@ -332,3 +322,21 @@ By default, a named element (instance of a concept with an attribute `name`) is 
 If there's an element in the middle of A and the elements you want A to be accessible, so merge the concept of A and its container.
 
 ![scope](./images/scope.png)
+
+### The `langium-visitor` visitor is not found
+
+This error occurs only on Windows computer.
+To resolve the problem, install `langium-visitor` in global:
+
+```bash
+npm i -g langium-visitor
+```
+
+### The `accept` method in my AST nodes is not found
+
+**Have you call the `weaveAcceptMethods` method in your module as specified in the README of the [visitor generator repository](https://github.com/theogiraudet/langium-visitor)?**
+
+If yes, so this may be due to a bug in the generator.
+Basically, the generator currently doesn't generate a weave method in the `AcceptWeaver.checks` property for abstract types.
+As Langium doesn't have a notion of "abstract types", the generator considers all the types having subtypes as abstract.
+To fix the issue, you have to manually complete the `AcceptWeaver.checks` and add a new `AcceptWeaver.weave<Concept>` for the non-generated concepts.
