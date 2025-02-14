@@ -61,7 +61,7 @@ export function setup(client: MonacoLanguageClient, uri: string) {
 
 
     // Listen to custom notifications coming from the server, here to call the parseAndValidate function
-    client.onNotification('custom/ParseAndValidate', execute);
+    client.onNotification('custom/ParseAndValidate', parseAndValidate);
 
     // Listen to the button click to notify the server to parseAndValidate the code
     // win.parseAndValidate is called in the index.html file, line 13
