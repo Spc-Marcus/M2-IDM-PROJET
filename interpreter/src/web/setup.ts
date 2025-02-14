@@ -1,8 +1,8 @@
 import { MonacoLanguageClient } from 'monaco-languageclient';
-import { Scene } from './web/simulator/scene.js';
-import { Wall } from './web/lib/wall.js';
-import { Robot } from './web/lib/robot.js';
-import p5 from "./web/lib/sketch.js";
+import { Scene } from './simulator/scene.js';
+import { Wall } from './lib/wall.js';
+import { Robot } from './lib/robot.js';
+import p5 from "./lib/sketch.js";
 
 // TODO : call it in setupClassic.ts
 /**
@@ -14,10 +14,10 @@ export function setup(client: MonacoLanguageClient, uri: string) {
     const win = window as any;
 
     // Modals for TypeChecking
-    var errorModal = document.getElementById("errorModal") as HTMLElement;
-    var validModal = document.getElementById("validModal") as HTMLElement;
-    var closeError = document.querySelector("#errorModal .close") as HTMLElement;
-    var closeValid = document.querySelector("#validModal .close") as HTMLElement;
+    var errorModal = document.getElementById("errorModal")! as HTMLElement;
+    var validModal = document.getElementById("validModal")! as HTMLElement;
+    var closeError = document.querySelector("#errorModal .close")! as HTMLElement;
+    var closeValid = document.querySelector("#validModal .close")! as HTMLElement;
     closeError.onclick = function() {
         errorModal.style.display = "none";
     }
@@ -45,10 +45,11 @@ export function setup(client: MonacoLanguageClient, uri: string) {
         // BONUS : Implement new semantics for typechecking
         
         if(errors.length > 0){
-            const modal = document.getElementById("errorModal") as HTMLElement;
+            const modal = document.getElementById("errorModal")! as HTMLElement;
+            
             modal.style.display = "block";
         } else {
-            const modal = document.getElementById("validModal") as HTMLElement;
+            const modal = document.getElementById("validModal")! as HTMLElement;
             modal.style.display = "block";
         }
     });

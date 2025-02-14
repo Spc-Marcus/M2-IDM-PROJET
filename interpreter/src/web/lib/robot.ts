@@ -10,7 +10,7 @@ export class Robot {
     factor: number;
     p5: P5;
 
-    constructor(factor, _x = 0, _y = 0, _width = 0, _height = 0, _angle = 0, p5: P5) {
+    constructor(factor: number, _x = 0, _y = 0, _width = 0, _height = 0, _angle = 0, p5: P5) {
         this.x = _x;
         this.y = _y;
         this.width = _width;

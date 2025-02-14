@@ -224,9 +224,14 @@ npm i -D @types/p5@1.7.6
 To understand how to create the communication between the LSP server and client, we propose you to first create a 'parseAndValidate' LSP action.
 The general idea of the 'parseAndValidate' action can be found [here](https://web.archive.org/web/20230323045804/https://langium.org/tutorials/customizing_cli/), while the code required to define new LSP action usable in the web is detailed [here](https://web.archive.org/web/20230323041439/https://langium.org/tutorials/generation_in_the_web/).
 However, the documentation for the web part is currently outdated for the latest version of Langium.
-Instead of it, you can add this code at the end of the `src/setupClassic.ts` file:
+Instead of it, you can add this code in the `src/setupClassic.ts` file:
 
 ```ts
+function getDocumentUri(wrapper: MonacoEditorLanguageClientWrapper): string {
+    return wrapper.getModel()!.uri.toString();
+}
+
+// At the end of `executeClassic`
 const client = wrapper.getLanguageClient();
 if (!client) {
     throw new Error('Unable to obtain language client!');
@@ -242,13 +247,13 @@ In the server side, we need to modify the function `src/language/main-browser.ts
 ```ts
 function getModelFromUri(uri: string): <YourRootConceptFromVisitor> | undefined {
     const document = shared.workspace.LangiumDocuments.getDocument(URI.parse(uri));
-    if(document && document.diagnostics === undefined || document.diagnostics.filter((i) => i.severity === 1).length === 0) {
+    if(document && document.diagnostics === undefined || document?.diagnostics?.filter((i) => i.severity === 1).length === 0) {
         return document.parseResult.value as <YourRootConceptFromVisitor>;
     }
     return undefined;
 }
 
-connection.onNotification("custom/ParseAndValidate", (uri: string) => connection.sendNotification("custom/ParseAndValidate", <yourMethod>(getModelFromUri(uri))));
+connection.onNotification("custom/ParseAndValidate", (uri: string) => connection.sendNotification("custom/ParseAndValidate", <yourMethod>(getModelFromUri(uri)!)));
 ```
 
 Here, we are listening a notification with the method `custom/ParseAndValidate`. When received, we are executing our custom method on each available model (if valid), such as validation or simulation, and we add the result to an array with the document name as key.
