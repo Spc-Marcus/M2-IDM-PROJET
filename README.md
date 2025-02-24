@@ -253,13 +253,16 @@ function getModelFromUri(uri: string): <YourRootConceptFromVisitor> | undefined 
     return undefined;
 }
 
-connection.onNotification("custom/ParseAndValidate", (uri: string) => connection.sendNotification("custom/ParseAndValidate", <yourMethod>(getModelFromUri(uri)!)));
+connection.onNotification("custom/hello", (uri: string) => connection.sendNotification("custom/hello", () => "World"));
 ```
 
-Here, we are listening to a notification with the method `custom/ParseAndValidate`. When received, we are executing our custom method on each available model (if valid), such as validation or simulation, and we add the result to an array with the document name as a key.
-At the end, we send the resulting array to the client on the same method.
+Here, we are listening a notification with the method `custom/hello`. When received, we are sending "World" to the client on the same method.
+The client will display `Hello World!` in the console.
+For your own code, you can replace the `() => "World"` by a call to your visitor.
+The method `getModelFromUri`, enables, from a document URI, to get your root concept or `undefined` if the program is not valid.
+Even if it is not used in this example, you can use it for your own code.
 
-Finally, you can execute `npm run serve` to run your server/client architecture and go to the printed URL to test your application.
+Finally, you can execute `npm run serve` to run your server/client architecture, and go to the printed URL to test your application.
 
 ### Compilation:
 
