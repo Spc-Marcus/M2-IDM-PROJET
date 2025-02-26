@@ -46,8 +46,6 @@ The lab sessions for this course will consist in the realization of these aspect
 To encourage you to finish completely at least one of the two possible semantics, yet exploring both compilation and interpretation, you will have to choose a major and a minor semantics.
 The major semantics will be used to evaluate your project.
 The minor one is not mandatory but can give you bonus points.
-This choice should be clearly stated in the README file of the git repository.
-
 The evaluation grid is the following:
 - Abstract syntax: 5
 - Concrete Syntax: 5
@@ -168,7 +166,7 @@ let void entry () {
 
 ### How to verify my grammar?
 
-When the grammar grows up, it may be difficult to verify if your grammar is valid.
+When the grammar grows, it may be difficult to verify if your grammar is valid.
 Even by testing your language, you cannot ensure your AST is built as you want.
 To help language designers with this task, Langium provides two different tools.
 
@@ -179,7 +177,7 @@ It allows you to verify your grammar at a higher level.
 ![railroad](./images/railroad.png)
 
 The second one is accessible from the Langium website, on the [`Playground` page](https://langium.org/playground/).
-Here you can past your grammar (without forgetting to also past your types and terminals, and removing your imports) and a program conforms to the grammar.
+Here you can paste your grammar (without forgetting to also past your types and terminals, and removing your imports) and a program conforms to the grammar.
 By clicking on the "Tree" icon, you can open a new panel displaying the abstract syntax tree of your program, in JSON.
 However be aware, the playground has sometimes some refresh issues so the program text editor may be not synchronized anymore with the grammar one.
 
