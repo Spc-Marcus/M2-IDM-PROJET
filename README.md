@@ -102,7 +102,7 @@ Depending on what modeling tool you picked in Part 1, the next step can change a
 
 ### Ecore modeling
 
-If you decided to model your domain using Ecore and Eclipse in the previous part, you may be aware that it is possible to generate an Xtext project from an Ecore project (by creating a new _Xtext Project From Existing Ecore Models_). Fortunately, it is possible to convert an Xtext grammar into a Langium grammar thanks to [this project](https://github.com/TypeFox/xtext2langium). You can thus write your grammar using Xtext rather than Langium if you so wish.
+If you decided to model your domain using Ecore and Eclipse in the previous part, you may be aware that it is possible to generate an Xtext project from an Ecore project (by creating a new _Xtext Project From Existing Ecore Models_). After creation you must convert the metamodel to Xtext Project (right click on the metamodel -> _Configure_ -> _Convert to Xtext Project_). Fortunately, it is possible to convert an Xtext grammar into a Langium grammar thanks to [this project](https://github.com/TypeFox/xtext2langium). You can thus write your grammar using Xtext rather than Langium if you so wish.
 
 To convert a grammar, go to the Eclipse menu _Help_ -> _Install new software_ -> in the site field, paste the URL `https://typefox.github.io/xtext2langium/download/updates/v0.4.0/` and install the package. Afterward, go into your Xtext project's `META-INF/MANIFEST.MF`, switch to the _Dependencies_ tab, and add Xtext2langium as a dependency. Don't forget to save your manifest file. Then you can go to the MWE2 file (named something like `GenerateMyDsl.mwe2`) in your project, and replace the `fragment` field with:
 
@@ -238,7 +238,7 @@ if (!client) {
 setup(client, getDocumentUri(wrapper)); // setup function of the setup.ts file
 ```
 
-You will find an example of communication between the client and the server from the client's perspective in the `setup.ts` file (lines 63 and 66).
+You will find an example of communication between the client and the server from the client's perspective in the `setup.ts` file (lines 101 and 105).
 
 On the server side, we need to modify the function `src/language/main-browser.ts` by adding this code at the end of the file:
 

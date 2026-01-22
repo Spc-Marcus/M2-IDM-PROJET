@@ -3,7 +3,6 @@ import { Scene } from './simulator/scene.js';
 import { Wall } from './lib/wall.js';
 import { Robot } from './lib/robot.js';
 import p5 from "./lib/sketch.js";
-import { CustomWindow } from './lib/utils.js';
 
 // TODO : call it in setupClassic.ts
 /**
@@ -12,7 +11,7 @@ import { CustomWindow } from './lib/utils.js';
  * @param uri the URI of the document, useful for the server to know which document is currently being edited.
  */
 export function setup(client: MonacoLanguageClient, uri: string) {
-    const win = window as CustomWindow;
+    const win = window as any;
 
     // Modals for TypeChecking
     var errorModal = document.getElementById("errorModal")! as HTMLElement;
