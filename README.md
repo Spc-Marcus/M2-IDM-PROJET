@@ -11,7 +11,7 @@ During these lab sessions, you will create your own version of RoboML, a languag
 Below, you can find an example of a program that we expect to write in your language.
 
 ```
-let void entry () {
+let void entry() {
     setSpeed(150 in mm) // distance per second (here 150mm/s)
     var number count = 0
     loop count < 5

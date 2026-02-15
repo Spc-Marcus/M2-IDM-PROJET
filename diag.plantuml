@@ -1,0 +1,192 @@
+@startuml
+
+' --- REGLAGES VISUELS ---
+skinparam linetype ortho
+skinparam nodesep 60
+skinparam ranksep 60
+skinparam classAttributeIconSize 0
+skinparam style strictuml
+hide empty members
+
+title Métamodèle RoboML (Final & Corrigé)
+
+' ==========================================
+' 1. STRUCTURE GLOBALE (Gauche)
+' ==========================================
+package "Structure" {
+    class RoboMLProgram {
+    }
+
+    class Function {
+        + name : String
+    }
+    
+    class Variable {
+        + name : String
+    }
+    
+    enum RType {
+        Number
+        Boolean
+        Void
+    }
+    
+    ' Relations Structurelles
+    RoboMLProgram "1" o--> "1" Function : entryPoint
+    RoboMLProgram "1" *--> "0..*" Function : functions
+    
+    Function "1" *--> "0..*" Variable : parameters
+    Function --> RType : returnType
+    Variable --> RType : type
+}
+
+' ==========================================
+' 2. INSTRUCTIONS (Centre)
+' ==========================================
+package "Instructions" {
+    abstract class Instruction {
+    }
+
+    ' --- Variables ---
+    class VariableDeclaration extends Instruction {
+        ' Crée une nouvelle variable
+    }
+
+    class Assignment extends Instruction {
+        ' Modifie une variable existante
+    }
+
+    ' --- Contrôle ---
+    class Loop extends Instruction {
+    }
+    
+    class Condition extends Instruction {
+    }
+    
+    ' --- Robot Actions ---
+    class Movement extends Instruction {
+        + direction : MoveDirection
+        + unit : Unit
+    }
+    
+    class Rotate extends Instruction {
+        + direction : RotateDirection
+    }
+    
+    class SetSpeed extends Instruction {
+        + unit : Unit
+    }
+    
+    class FunctionCall extends Instruction {
+        ' Peut aussi être utilisé comme Expression
+    }
+    
+    class Return extends Instruction {
+        ' Retourne une valeur depuis une fonction
+    }
+    
+    ' Relations Instructions
+    Function "1" *--> "0..*" Instruction : instructions
+    
+    Loop "1" *--> "0..*" Instruction : body
+    Condition "1" *--> "0..*" Instruction : thenBody
+    Condition "1" *--> "0..*" Instruction : elseBody
+}
+
+' ==========================================
+' 3. EXPRESSIONS (Droite)
+' ==========================================
+package "Expressions" {
+    abstract class Expression {
+    }
+
+    class BinaryExpression extends Expression {
+        + operator : Operator
+    }
+    
+    class Literal extends Expression {
+        + value : String
+    }
+    
+    class VariableRef extends Expression {
+        ' Utilise une variable dans un calcul
+    }
+    
+    class SensorAccess extends Expression {
+        + sensor : SensorType
+    }
+    
+    class FunctionCall extends Expression {
+        ' Appel de fonction (peut aussi être Instruction)
+    }
+}
+
+' ==========================================
+' 4. ENUMERATIONS (Bas)
+' ==========================================
+package "Enums" {
+    enum Unit {
+        cm
+        mm
+    }
+
+    enum MoveDirection {
+        FORWARD
+        BACKWARD
+    }
+    
+    enum RotateDirection {
+        CLOCKWISE
+        COUNTER_CLOCKWISE
+    }
+    
+    enum SensorType {
+        DISTANCE
+        TIME
+        BATTERY
+    }
+    
+    enum Operator {
+        PLUS
+        MINUS
+        MULTIPLY
+        DIVIDE
+        LESS
+        GREATER
+        EQUALS
+    }
+}
+
+' ==========================================
+' RELATIONS TRANSVERSALES (LE CIMENT)
+' ==========================================
+
+' 1. Gestion des Variables (CRUCIAL)
+VariableDeclaration *--> "1" Variable : variable
+VariableDeclaration *--> "1" Expression : value (initial)
+
+Assignment --> "1" Variable : assignee (Reference)
+Assignment *--> "1" Expression : value (new)
+
+VariableRef --> "1" Variable : variable (Reference)
+
+' 2. Paramètres des Instructions
+Loop *--> "1" Expression : condition
+Condition *--> "1" Expression : condition
+
+Movement *--> "1" Expression : distance
+Rotate *--> "1" Expression : angle
+SetSpeed *--> "1" Expression : value
+
+' 3. Structure des Expressions
+BinaryExpression *--> "1" Expression : left
+BinaryExpression *--> "1" Expression : right
+
+' 4. Appels de fonction
+FunctionCall --> "1" Function : function
+FunctionCall *--> "0..*" Expression : arguments
+
+' 5. Retour de fonction
+Return *--> "0..1" Expression : value
+
+@enduml
