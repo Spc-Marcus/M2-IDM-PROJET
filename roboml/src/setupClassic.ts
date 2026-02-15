@@ -1,30 +1,46 @@
-import { MonacoEditorLanguageClientWrapper, UserConfig } from 'monaco-editor-wrapper';
-import { configureWorker, defineUserServices } from './setupCommon.js';
+import { MonacoEditorLanguageClientWrapper, type WrapperConfig } from 'monaco-editor-wrapper';
+import { configureWorker, defineVscodeApiConfig, monacoWorkerFactory } from './setupCommon.js';
 import monarchSyntax from "./syntaxes/robo-ml.monarch.js";
 
-export const setupConfigClassic = (): UserConfig => {
+export const setupConfigClassic = (htmlElement: HTMLElement): WrapperConfig => {
+    const editorOptions: any = {
+        theme: 'vs-dark',
+        'semanticHighlighting.enabled': true
+    };
+
     return {
-        wrapperConfig: {
-            serviceConfig: defineUserServices(),
-            editorAppConfig: {
-                $type: 'classic',
-                languageId: 'robo-ml',
-                code: `// RoboML is running in the web!`,
-                useDiffEditor: false,
-                languageExtensionConfig: { id: 'langium' },
-                languageDef: monarchSyntax,
-                editorOptions: {
-                    'semanticHighlighting.enabled': true,
-                    theme: 'vs-dark'
+        $type: 'classic',
+        htmlContainer: htmlElement,
+        vscodeApiConfig: defineVscodeApiConfig(),
+        editorAppConfig: {
+            codeResources: {
+                modified: {
+                    uri: '/workspace/main.robo-ml',
+                    text: `// RoboML is running in the web!`,
+                    enforceLanguageId: 'robo-ml'
                 }
-            }
+            },
+            useDiffEditor: false,
+            monacoWorkerFactory,
+            languageDef: {
+                languageExtensionConfig: {
+                    id: 'robo-ml',
+                    extensions: ['.robo-ml']
+                },
+                monarchLanguage: monarchSyntax
+            },
+            editorOptions
         },
-        languageClientConfig: configureWorker()
+        languageClientConfigs: {
+            configs: {
+                'robo-ml': configureWorker()
+            }
+        }
     };
 };
 
 export const executeClassic = async (htmlElement: HTMLElement) => {
-    const userConfig = setupConfigClassic();
+    const wrapperConfig = setupConfigClassic(htmlElement);
     const wrapper = new MonacoEditorLanguageClientWrapper();
-    await wrapper.initAndStart(userConfig, htmlElement);
+    await wrapper.initAndStart(wrapperConfig);
 };

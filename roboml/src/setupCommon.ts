@@ -1,28 +1,16 @@
-import getEditorServiceOverride from '@codingame/monaco-vscode-editor-service-override';
 import getKeybindingsServiceOverride from '@codingame/monaco-vscode-keybindings-service-override';
-import { LanguageClientConfig } from 'monaco-editor-wrapper';
-import { useOpenEditorStub } from 'monaco-editor-wrapper/vscode/services';
-import { useWorkerFactory } from 'monaco-editor-wrapper/workerFactory';
+import type { LanguageClientConfig } from 'monaco-editor-wrapper';
+import { configureDefaultWorkerFactory } from 'monaco-editor-wrapper/workers/workerLoaders';
 
-export const defineUserServices = () => {
+export const defineVscodeApiConfig = (): any => {
     return {
-        userServices: {
-            ...getEditorServiceOverride(useOpenEditorStub),
+        serviceOverrides: {
             ...getKeybindingsServiceOverride()
-        },
-        debugLogging: true
-    }
+        }
+    };
 };
 
-export const configureMonacoWorkers = () => {
-    // override the worker factory with your own direct definition
-    useWorkerFactory({
-        ignoreMapping: true,
-        workerLoaders: {
-            editorWorkerService: () => new Worker(new URL('monaco-editor/esm/vs/editor/editor.worker.js', import.meta.url), { type: 'module' })
-        }
-    });
-};
+export const monacoWorkerFactory = configureDefaultWorkerFactory;
 
 export const configureWorker = (): LanguageClientConfig => {
     // vite does not extract the worker properly if it is URL is a variable
@@ -32,9 +20,15 @@ export const configureWorker = (): LanguageClientConfig => {
     });
 
     return {
-        options: {
-            $type: 'WorkerDirect',
-            worker: lsWorker
+        name: 'RoboML',
+        connection: {
+            options: {
+                $type: 'WorkerDirect',
+                worker: lsWorker
+            }
+        },
+        clientOptions: {
+            documentSelector: [{ scheme: '*', language: 'robo-ml' }]
         }
-    }
+    };
 };
