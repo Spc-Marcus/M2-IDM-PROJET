@@ -88,15 +88,16 @@ Counter 45               // sens anti-horaire
 ## Vitesse
 
 ```roboml
-setSpeed(150 in mm)
+setSpeed(150 in mm)       // 'in' optionnel
+setSpeed(200 mm)
 ```
 
 ## Capteurs
 
 ```roboml
-sensor.distance
-sensor.time
-sensor.battery
+getDistance()              // distance en unité par défaut
+getTimestamp()             // temps courant
+var number d = getDistance() in cm   // avec conversion
 ```
 
 ## Appels de fonction
@@ -116,5 +117,16 @@ return expression
 
 `let` `var` `loop` `if` `else` `return` `setSpeed`
 `Forward` `Backward` `Left` `Right` `Clock` `Counter`
-`in` `cm` `mm` `true` `false` `sensor` `distance` `time` `battery`
+`in` `cm` `mm` `true` `false` `getDistance` `getTimestamp`
 `number` `boolean` `void`
+
+## Validations
+
+Le compilateur vérifie automatiquement :
+
+- **Point d'entrée** : une fonction `entry` retournant `void` doit exister.
+- **Fonctions dupliquées** : deux fonctions ne peuvent pas avoir le même nom.
+- **Void dans expression** : une fonction `void` ne peut pas être utilisée comme valeur (`var number x = doNothing()` → erreur).
+- **Nombre d'arguments** : l'appel doit fournir le bon nombre de paramètres.
+- **Type des arguments** : chaque argument doit correspondre au type attendu (`number` / `boolean`).
+- **Return manquant** : une fonction non-`void` sans `return` produit un warning.
