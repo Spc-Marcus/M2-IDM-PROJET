@@ -1,6 +1,6 @@
 // Types énumérés
 type Operator = '+' | '-' | '*' | '/' | '<' | '>' | '==';
-type SensorType = 'distance' | 'time' | 'battery';
+type SensorType = 'getDistance' | 'getTimestamp';
 type MoveDirection = 'Forward' | 'Backward' | 'Left' | 'Right';
 type RotateDirection = 'Clock' | 'Counter';
 type Unit = 'cm' | 'mm';
@@ -32,6 +32,7 @@ interface Expression {}
 interface VariableDeclaration extends Instruction {
     variable: Variable
     value: Expression
+    unit: Unit
 }
 
 interface Assignment extends Instruction {

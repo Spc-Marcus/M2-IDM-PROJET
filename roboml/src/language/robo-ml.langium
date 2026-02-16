@@ -29,7 +29,7 @@ Instruction returns Instruction:
 
 // var <type> <nom> = <expr>
 VariableDeclaration returns VariableDeclaration:
-    'var' variable=InlineVariable '=' value=Expression
+    'var' variable=InlineVariable '=' value=Expression ('in' unit=Unit)?
 ;
 
 InlineVariable returns Variable:
@@ -76,9 +76,9 @@ RotateDirection returns RotateDirection:
     'Clock' | 'Counter'
 ;
 
-// setSpeed(<val> in cm|mm)
+// setSpeed(<val> [in] cm|mm)
 SetSpeed returns SetSpeed:
-    'setSpeed' '(' value=Expression 'in' unit=Unit ')'
+    'setSpeed' '(' value=Expression 'in'? unit=Unit ')'
 ;
 
 Unit returns Unit:
@@ -111,11 +111,11 @@ PrimaryExpression returns Expression:
     '(' Expression ')'
     | {NumberLiteral} value=INT
     | {BooleanLiteral} value=('true' | 'false')
-    | {SensorAccess} 'sensor' '.' sensor=SensorType
+    | {SensorAccess} sensor=SensorType '(' ')'
     | {FunctionCall} function=[FunctionDef:ID] '(' (arguments+=Expression (',' arguments+=Expression)*)? ')'
     | {VariableRef} variable=[Variable:ID]
 ;
 
 SensorType returns SensorType:
-    'distance' | 'time' | 'battery'
+    'getDistance' | 'getTimestamp'
 ;
