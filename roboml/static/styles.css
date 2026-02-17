@@ -26,10 +26,12 @@ a:visited {
     flex-direction: column;
     height: 100%;
     width: 100%;
+    min-height: 600px;
 }
 
 #monaco-editor-root {
     flex-grow: 1;
+    height: 600px;
 }
 
 /* for p5.js */
@@ -75,11 +77,14 @@ canvas {
 #page-wrapper .editor {
     display: flex;
     width: 45%;
+    min-height: 600px;
 }
 
 #page-wrapper .simulator {
     display: flex;
     width: 55%;
+    justify-content: center;
+    align-items: center;
 }
 
 /* Typechecking Modal */

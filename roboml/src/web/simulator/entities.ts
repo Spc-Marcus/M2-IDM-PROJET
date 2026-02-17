@@ -30,15 +30,15 @@ export class Robot implements Entities{
     }
 
     turn(angle:number) : void {
-        // To implement
+        this.rad += angle;
     }
 
     move(dist:number) : void {
-        // To implement
+        this.pos = this.pos.plus(Vector.fromAngle(this.rad, dist));
     }
 
     side(dist:number) : void {
-        // To implement
+        this.pos = this.pos.plus(Vector.fromAngle(this.rad + Math.PI / 2, dist));
     }
 
     getRay(){

@@ -2,6 +2,8 @@ import getKeybindingsServiceOverride from '@codingame/monaco-vscode-keybindings-
 import type { LanguageClientConfig } from 'monaco-editor-wrapper';
 import { configureDefaultWorkerFactory } from 'monaco-editor-wrapper/workers/workerLoaders';
 
+export const configureMonacoWorkers = configureDefaultWorkerFactory;
+
 export const defineVscodeApiConfig = (): any => {
     return {
         serviceOverrides: {

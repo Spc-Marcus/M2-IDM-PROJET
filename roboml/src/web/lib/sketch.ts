@@ -7,6 +7,7 @@ const win = window as CustomWindow;
 
 const sketch = (p: P5) => {
     p.setup = () => {
+        console.info('[RoboML:sketch] p5 setup – creating canvas 1000x1000');
         const canvas = p.createCanvas(1000, 1000, document.getElementById("simulator") as HTMLCanvasElement);
         canvas.parent("simulator-wrapper");
         win.entities = [];
@@ -15,6 +16,8 @@ const sketch = (p: P5) => {
         win.scene = undefined;
         win.p5robot = new Robot(1, p.width / 2, p.height / 2, undefined, undefined, undefined, p);
     };
+
+    let loggedOnce = false;
 
     p.draw = () => {
         p.background(0);
@@ -26,11 +29,18 @@ const sketch = (p: P5) => {
         }
 
         if (win.scene !== null && win.scene && win.scene.timestamps.length > win.lastTimestamp + 1) {
-            win.time += win.deltaTime
+            if (!loggedOnce) {
+                console.info('[RoboML:sketch] Animation started – timestamps:', win.scene.timestamps.length, 'current:', win.lastTimestamp);
+                loggedOnce = true;
+            }
+            win.time += p.deltaTime;
             updateRobot(p);
+        } else if (loggedOnce && win.scene && win.lastTimestamp + 1 >= win.scene.timestamps.length) {
+            console.info('[RoboML:sketch] Animation complete – final timestamp:', win.lastTimestamp);
+            loggedOnce = false;
         }
 
-        if (win.p5robot !== null) {
+        if (win.p5robot !== null && win.p5robot !== undefined) {
             win.p5robot.show();
         }
     };
@@ -55,11 +65,11 @@ function updateRobot(p: P5) {
 }
 
 function resetSimulation() {
+    console.info('[RoboML:sketch] resetSimulation called');
     win.time = 0;
     win.lastTimestamp = 0;
 }
 
-win.setup = p5.setup
 win.resetSimulation = resetSimulation
 
 export default p5;
