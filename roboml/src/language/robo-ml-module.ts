@@ -3,6 +3,7 @@ import { createDefaultModule, createDefaultSharedModule, type DefaultSharedModul
 import { RoboMLGeneratedModule, RoboMlGeneratedSharedModule } from './generated/module.js';
 import { RoboMlValidator, registerValidationChecks } from './robo-ml-validator.js';
 import { RoboMlScopeComputation } from './robo-ml-scope.js';
+import { RoboMlAcceptWeaver } from '../semantics/robo-ml-accept-weaver.js';
 
 // Services custom
 export type RoboMlAddedServices = {
@@ -39,6 +40,10 @@ export function createRoboMlServices(context: DefaultSharedModuleContext): {
         RoboMlModule
     );
     shared.ServiceRegistry.register(RoboMl);
+    
+    // Instancier le Accept Weaver pour ajouter accept() aux nœuds AST
+    new RoboMlAcceptWeaver(RoboMl);
+    
     registerValidationChecks(RoboMl);
     if (!context.connection) {
         // Pas de language server → init config directement

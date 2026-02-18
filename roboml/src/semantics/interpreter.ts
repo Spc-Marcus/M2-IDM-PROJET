@@ -31,7 +31,7 @@ export class RoboMLInterpreter implements RoboMlVisitor {
     private functions: Map<string, FunctionDef> = new Map();
 
     // Max iterations to avoid infinite loops
-    private static readonly MAX_LOOP_ITERATIONS = 100_000;
+    private static readonly MAX_LOOP_ITERATIONS = 10_000;
 
     // ─────────────────────────────────────────────────────────
     //  Public entry point
@@ -76,46 +76,13 @@ export class RoboMLInterpreter implements RoboMlVisitor {
         return result;
     }
 
-    // ─────────────────────────────────────────────────────────
-    //  Dispatch helpers ($type-based, avoids weaver dependency)
-    // ─────────────────────────────────────────────────────────
-
-    private evalExpr(node: any): any {
-        switch (node.$type) {
-            case 'BinaryExpression':   return this.visitBinaryExpression(node);
-            case 'NumberLiteral':      return this.visitNumberLiteral(node);
-            case 'BooleanLiteral':     return this.visitBooleanLiteral(node);
-            case 'FunctionCall':       return this.visitFunctionCall(node);
-            case 'SensorAccess':       return this.visitSensorAccess(node);
-            case 'VariableRef':        return this.visitVariableRef(node);
-            default:
-                throw new Error(`[RoboML] Unknown expression type: ${node.$type}`);
-        }
-    }
-
-    private execInstr(node: any): any {
-        switch (node.$type) {
-            case 'VariableDeclaration': return this.visitVariableDeclaration(node);
-            case 'Assignment':          return this.visitAssignment(node);
-            case 'Loop':                return this.visitLoop(node);
-            case 'Condition':           return this.visitCondition(node);
-            case 'Movement':            return this.visitMovement(node);
-            case 'Rotate':              return this.visitRotate(node);
-            case 'SetSpeed':            return this.visitSetSpeed(node);
-            case 'Return':              return this.visitReturn(node);
-            case 'FunctionCall':        return this.visitFunctionCall(node);
-            default:
-                throw new Error(`[RoboML] Unknown instruction type: ${node.$type}`);
-        }
-    }
-
     /**
      * Execute a list of instructions, stopping early if a Return is encountered.
      * Returns a ReturnSignal if one was raised, otherwise undefined.
      */
     private execBlock(instructions: any[]): any {
         for (const instr of instructions) {
-            const result = this.execInstr(instr);
+            const result = instr.accept(this);
             if (result instanceof ReturnSignal) {
                 return result;
             }
@@ -274,12 +241,12 @@ export class RoboMLInterpreter implements RoboMlVisitor {
     // ─────────────────────────────────────────────────────────
 
     visitExpression(node: Expression): any {
-        return this.evalExpr(node);
+        return node.accept(this);
     }
 
     visitBinaryExpression(node: BinaryExpression): any {
-        const left = this.evalExpr(node.left);
-        const right = this.evalExpr(node.right);
+        const left = node.left.accept(this);
+        const right = node.right.accept(this);
 
         switch (node.operator) {
             case '+':  return (left as number) + (right as number);
@@ -312,7 +279,7 @@ export class RoboMLInterpreter implements RoboMlVisitor {
         }
 
         // Evaluate arguments
-        const args = (node.arguments as any[]).map((arg: any) => this.evalExpr(arg));
+        const args = (node.arguments as any[]).map((arg: any) => arg.accept(this));
 
         // Execute
         return this.executeFunction(fnDef as unknown as FunctionDef, args);
@@ -343,7 +310,7 @@ export class RoboMLInterpreter implements RoboMlVisitor {
     // ─────────────────────────────────────────────────────────
 
     visitVariableDeclaration(node: VariableDeclaration): any {
-        let value = this.evalExpr(node.value);
+        let value = node.value.accept(this);
 
         // If a unit is specified, convert the raw value (assumed mm) to the target unit
         if (node.unit) {
@@ -356,7 +323,7 @@ export class RoboMLInterpreter implements RoboMlVisitor {
     }
 
     visitAssignment(node: Assignment): any {
-        const value = this.evalExpr(node.value);
+        const value = node.value.accept(this);
         const varRef = node.assignee;
         const varDef = varRef.ref;
         if (!varDef) {
@@ -367,7 +334,7 @@ export class RoboMLInterpreter implements RoboMlVisitor {
     }
 
     visitCondition(node: Condition): any {
-        const cond = this.evalExpr(node.condition);
+        const cond = node.condition.accept(this);
         if (cond) {
             return this.execBlock(node.thenBody as any[]);
         } else if (node.elseBody && node.elseBody.length > 0) {
@@ -379,7 +346,7 @@ export class RoboMLInterpreter implements RoboMlVisitor {
     visitLoop(node: Loop): any {
         let iterations = 0;
         while (true) {
-            const cond = this.evalExpr(node.condition);
+            const cond = node.condition.accept(this);
             if (!cond) break;
 
             const result = this.execBlock(node.body as any[]);
@@ -389,7 +356,8 @@ export class RoboMLInterpreter implements RoboMlVisitor {
 
             iterations++;
             if (iterations > RoboMLInterpreter.MAX_LOOP_ITERATIONS) {
-                console.warn('[RoboML] Max loop iterations reached – breaking out.');
+                console.warn(`[RoboML] Max loop iterations (${RoboMLInterpreter.MAX_LOOP_ITERATIONS}) reached – breaking out to prevent crash.`);
+                console.warn('[RoboML] Tip: Use a condition to exit your loops or reduce iteration count.');
                 break;
             }
         }
@@ -397,26 +365,26 @@ export class RoboMLInterpreter implements RoboMlVisitor {
     }
 
     visitMovement(node: Movement): any {
-        const rawDist = this.evalExpr(node.distance) as number;
+        const rawDist = node.distance.accept(this) as number;
         const distMm = this.toMm(rawDist, node.unit);
         this.moveRobot(distMm, node.direction);
         return undefined;
     }
 
     visitRotate(node: Rotate): any {
-        const angleDeg = this.evalExpr(node.angle) as number;
+        const angleDeg = node.angle.accept(this) as number;
         this.rotateRobot(angleDeg, node.direction);
         return undefined;
     }
 
     visitSetSpeed(node: SetSpeed): any {
-        const rawSpeed = this.evalExpr(node.value) as number;
+        const rawSpeed = node.value.accept(this) as number;
         this.speed = this.toMm(rawSpeed, node.unit); // store internally in mm/s
         return undefined;
     }
 
     visitReturn(node: Return): any {
-        const value = this.evalExpr(node.value);
+        const value = node.value.accept(this);
         return new ReturnSignal(value);
     }
 
@@ -433,7 +401,7 @@ export class RoboMLInterpreter implements RoboMlVisitor {
     }
 
     visitInstruction(node: Instruction): any {
-        return this.execInstr(node);
+        return node.accept(this);
     }
 
     visitVariable(node: Variable): any {

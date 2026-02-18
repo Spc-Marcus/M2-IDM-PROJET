@@ -1,4 +1,4 @@
-import { EmptyFileSystem } from 'langium';
+import { EmptyFileSystem, DocumentState } from 'langium';
 import { startLanguageServer } from 'langium/lsp';
 import { BrowserMessageReader, BrowserMessageWriter, createConnection } from 'vscode-languageserver/browser.js';
 import { createRoboMlServices } from './robo-ml-module.js';
@@ -17,16 +17,27 @@ const { shared } = createRoboMlServices({ connection, ...EmptyFileSystem });
 
 startLanguageServer(shared);
 
-function getModelFromUri(uri: string): Program | undefined {
+async function getModelFromUri(uri: string): Promise<Program | undefined> {
     console.log('[RoboML:server] getModelFromUri:', uri);
     const document = shared.workspace.LangiumDocuments.getDocument(URI.parse(uri));
     if (!document) {
         console.warn('[RoboML:server] No document found for URI:', uri);
         return undefined;
     }
+    
+    // Attendre que le document soit au moins dans l'état "IndexedReferences"
+    // afin que le weaver ait ajouté les méthodes accept()
+    console.log('[RoboML:server] Document state:', document.state);
+    if (document.state < DocumentState.IndexedReferences) {
+        console.log('[RoboML:server] Waiting for document to be processed...');
+        await shared.workspace.DocumentBuilder.build([document], { validation: true });
+    }
+    
     const diagnostics = document.diagnostics;
     const errors = diagnostics?.filter((i) => i.severity === 1) ?? [];
     console.log('[RoboML:server] Document diagnostics: total=', diagnostics?.length ?? 0, 'errors=', errors.length);
+    console.log('[RoboML:server] Document final state:', document.state);
+    
     if (diagnostics === undefined || errors.length === 0) {
         console.log('[RoboML:server] Model is valid, returning AST');
         return document.parseResult.value as Program;
@@ -36,9 +47,9 @@ function getModelFromUri(uri: string): Program | undefined {
 }
 
 // ── "Execute Simulation" button handler ──
-connection.onNotification("custom/execute", (uri: string) => {
+connection.onNotification("custom/execute", async (uri: string) => {
     console.log('[RoboML:server] Received custom/execute for:', uri);
-    const model = getModelFromUri(uri);
+    const model = await getModelFromUri(uri);
     if (model) {
         try {
             const interpreter = new RoboMLInterpreter();
@@ -60,9 +71,9 @@ connection.onNotification("custom/execute", (uri: string) => {
 });
 
 // ── "Parse and Validate" button handler ──
-connection.onNotification("custom/hello", (uri: string) => {
+connection.onNotification("custom/hello", async (uri: string) => {
     console.log('[RoboML:server] Received custom/hello for:', uri);
-    const model = getModelFromUri(uri);
+    const model = await getModelFromUri(uri);
     if (model) {
         console.log('[RoboML:server] Validation OK');
         connection.sendNotification("custom/typecheckResult", { errors: [] });

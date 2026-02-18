@@ -19,8 +19,13 @@ L'interpréteur RoboML exécute les programmes écrits dans le langage RoboML et
          │
          ▼
 ┌─────────────────┐
-│  Interpréteur   │  Visite l'AST et simule
-│   (Visitor)     │
+│  Accept Weaver  │  Ajoute accept() à chaque nœud AST
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│  Interpréteur   │  Utilise node.accept(this)
+│   (Visitor)     │  pour visiter l'AST
 └────────┬────────┘
          │
          ▼
@@ -28,6 +33,29 @@ L'interpréteur RoboML exécute les programmes écrits dans le langage RoboML et
 │   Scène 3D      │  Timestamps du robot
 │  + Timestamps   │  pour animation P5.js
 └─────────────────┘
+```
+
+### Pattern Visitor avec Accept Weaver
+
+L'interpréteur utilise le **pattern Visitor** pur grâce au **Accept Weaver** :
+
+1. **Accept Weaver** : Ajoute dynamiquement une méthode `accept(visitor)` à chaque nœud de l'AST
+2. **Interpréteur** : Implémente `RoboMlVisitor` avec toutes les méthodes `visit*`
+3. **Dispatch automatique** : Au lieu de `switch(node.$type)`, on appelle `node.accept(this)`
+
+**Exemple** :
+```typescript
+// ❌ Ancien (dispatch manuel)
+visitBinaryExpression(node: BinaryExpression) {
+    const left = this.evalExpr(node.left);   // switch sur $type
+    const right = this.evalExpr(node.right);
+}
+
+// ✅ Nouveau (pattern visitor pur)
+visitBinaryExpression(node: BinaryExpression) {
+    const left = node.left.accept(this);     // dispatch automatique
+    const right = node.right.accept(this);
+}
 ```
 
 ## Fonctionnalités implémentées
@@ -41,6 +69,10 @@ L'interpréteur RoboML exécute les programmes écrits dans le langage RoboML et
 - **Fonctions** : appels avec arguments
 
 ### Instructions
+- **Déclaration** : `var number x = 10 in cm`
+- **Affectation** : `x = 20`
+- **Conditions** : `if condition { ... } else { ... }`
+- **Boucles** : `loop condition { ... }`
 - **Mouvements** : `Forward/Backward/Left/Right <dist> in cm|mm`
 - **Rotations** : `Clock/Counter <angle>`
 - **Vitesse** : `setSpeed(200 mm)`
@@ -50,47 +82,13 @@ L'interpréteur RoboML exécute les programmes écrits dans le langage RoboML et
 - Conversion automatique **cm ↔ mm**
 - Support des unités dans les déclarations et mouvements
 
-## Débogage rapide et test (à lire d'abord)
-
-Suivre ces étapes pour vérifier rapidement que l'interpréteur fait bien ce qu'on attend et pour localiser un comportement incorrect :
-
-- Lancer le serveur de développement :
-
-```bash
-npm run dev
-```
-
-- Ouvrir la page (Vite indique l'URL, p.ex. `http://localhost:5173` ou `http://localhost:5177`).
-- Ouvrir la console du navigateur (F12) et filtrer sur les tags suivants : `RoboML:server`, `RoboML:interpreter`, `RoboML:setup`, `RoboML:simulator`, `RoboML:sketch`.
-- Dans l'éditeur, charger ou coller un programme (p.ex. `test/example.robo`).
-- Cliquer `Parse and Validate` → vérifier dans la console `RoboML:server` que le modèle est valide (pas de diagnostics bloquants).
-- Cliquer `Execute Simulation` → dans la console vous devez voir :
-   - `RoboML:server` → réception de la requête et confirmation d'envoi de la scène
-   - `RoboML:interpreter` → liste des fonctions détectées puis lignes `moveRobot` / `rotateRobot` pour chaque action
-   - `RoboML:setup` → réception de la scène, affichage du facteur d'échelle et des entités
-   - `RoboML:sketch` → démarrage de l'animation et progression des timestamps
-
-Que regarder si la simulation est incorrecte :
-- Si la scène n'arrive pas : vérifier les diagnostics dans `RoboML:server` (getModelFromUri).  
-- Si les positions sont étranges : contrôler les logs `RoboML:interpreter` pour les positions après chaque mouvement et la conversion d'unités (cm→mm).  
-- Si l'animation ne démarre pas : vérifier `RoboML:setup` pour la présence de `timestamps` (doit y avoir plusieurs entrées).  
-- Si les rayons (`getDistance`) rendent des valeurs inattendues : vérifier `scene.entities` dans `RoboML:setup` et les sorties de `Ray.intersect` dans la console.
-
-### Petit pas‑à‑pas attendu pour `test/example.robo`
-
-1. `Parse and Validate` → `RoboML:server` indique « Model is valid ».  
-2. `Execute Simulation` → `RoboML:server` appelle l'interpréteur et loggue « Executing entry function... ».  
-3. `RoboML:interpreter` loggue `moveRobot`/`rotateRobot` pour chaque instruction ; après chaque mouvement on voit la nouvelle position et le temps courant.  
-4. `RoboML:interpreter` termine et renvoie la scène (log : `Interpretation complete.`).  
-5. `RoboML:setup` reçoit la scène, calcule `factor` et instancie le robot côté client.  
-6. `RoboML:sketch` démarre l'animation et interpole entre les timestamps jusqu'à la fin.
-
-Si tu veux, j'ajoute un petit script de test (fichier à créer) qui construit le projet puis exécute l'interpréteur sur `test/example.robo` et écrit le JSON produit dans `out/scene.json` — veux‑tu que je le crée et l'exécute automatiquement ?
 ## Fichiers modifiés
 
 | Fichier | Description |
 |---------|-------------|
-| `src/semantics/interpreter.ts` | Interpréteur complet avec scope stack, exécution d'expressions/instructions, génération de timestamps |
+| `src/semantics/interpreter.ts` | **Interpréteur complet** utilisant `node.accept(this)` pour le pattern Visitor pur. Plus de `evalExpr()` ni `execInstr()` : dispatch automatique via accept() |
+| `src/semantics/robo-ml-visitor.ts` | Interface `RoboMlVisitor` **générée automatiquement** par `langium-visitor` |
+| `src/semantics/robo-ml-accept-weaver.ts` | **Accept Weaver généré** qui ajoute `accept()` à chaque nœud AST |
 | `src/web/simulator/entities.ts` | Implémentation des méthodes `turn()`, `move()`, `side()` du Robot |
 | `src/language/main-browser.ts` | Serveur de langage : gestion des notifications `custom/execute` et `custom/hello` |
 | `src/web/setup.ts` | Client web : écoute des résultats et configuration du simulateur P5.js |
@@ -174,6 +172,41 @@ let void entry () {
    - Utilise `p5.map()` pour interpolation fluide
 
 ## Détails techniques
+
+### Pattern Visitor et Accept Weaver
+
+L'interpréteur utilise le **pattern Visitor** pur via le mécanisme d'**Accept Weaver** :
+
+**1. Génération automatique** (`robo-ml-accept-weaver.ts`)
+- Généré par `langium-visitor`
+- Écoute l'événement `DocumentState.IndexedReferences`
+- Ajoute dynamiquement `accept(visitor)` à chaque nœud AST
+
+**2. Interface Visitor** (`robo-ml-visitor.ts`)
+```typescript
+export interface RoboMlVisitor {
+    visitBinaryExpression(node: BinaryExpression): any;
+    visitMovement(node: Movement): any;
+    // ... toutes les méthodes pour chaque type de nœud
+}
+```
+
+**3. Implémentation** (`interpreter.ts`)
+```typescript
+export class RoboMLInterpreter implements RoboMlVisitor {
+    visitBinaryExpression(node: BinaryExpression): any {
+        const left = node.left.accept(this);   // ← dispatch automatique
+        const right = node.right.accept(this);
+        return left + right; // exemple
+    }
+}
+```
+
+**Avantages** :
+- ✅ Type-safe : TypeScript vérifie que tous les visiteurs sont implémentés
+- ✅ Extensible : Ajouter un nouveau type de nœud génère automatiquement l'interface
+- ✅ Pattern GoF : Respecte le design pattern Visitor classique
+- ✅ Pas de switch/case : Le dispatch est géré par le système de types
 
 ### Scope stack
 Les variables sont stockées dans une pile de scopes :
